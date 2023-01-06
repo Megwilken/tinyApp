@@ -5,17 +5,14 @@ const PORT = 8080;
 app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
 
-function generateRandomString(length) {
-  let chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let charsLength = chars.length;
+function generateRandomString() {
   let result = '';
-  for (let i = 0; i < length; i++) {
-     result += chars.charAt(Math.floor(Math.random() * charsLength));
+  let chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  for (let i = 0; i < 6; i++) {
+     result += chars.charAt(Math.floor(Math.random() * chars.length));
   }
   return result;
 }
-generateRandomString(6);
-
 
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
@@ -48,7 +45,8 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  res.redirect("/urls/:id");
+  const id = generateRandomString();
+  res.redirect(`/urls/${id}`);
 });
 
 app.get("/urls/:id", (req, res) => {
@@ -61,3 +59,7 @@ app.get("/u/:id", (req, res) => {
   res.redirect(longURL);
 });
 
+app.post("/urls/:id/delete", (req, res) => {
+  delete urlDatabase[req.params.id];
+  res.redirect("/urls");
+});
