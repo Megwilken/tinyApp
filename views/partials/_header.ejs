@@ -13,14 +13,21 @@
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-      <div class="navbar-nav">
+      <div class="navbar-nav col-md-8">
         <a class="nav-item nav-link" href="/urls">My URLs</a>
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
       </div>
-      <form action="/login" method="POST" class="float-right"><input type="text placeholder="username">
+       <% if (username) { %> 
+           <p>Logged in as: TinyApp User!</p>
+        <form action="/logout" method="POST" class="col-md-4">
+        <button type="submit" class="btn btn-outline-dark">Logout</button>
+        </form>
+        <% } else { %> 
+        <form action="/login" method="POST" class="col-md-4">
+        <input type="text" name="username" placeholder="username">
         <button type="submit" class="btn btn-outline-dark">Login</button>
       </form>
+      <% } %>
     </div>
-
   </nav>
 </header>

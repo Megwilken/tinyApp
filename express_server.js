@@ -4,7 +4,7 @@ const morgan = require("morgan");
 const bodyParser = require("body-parser");
 
 const app = express();
-const PORT = 8080;
+const PORT = 8000;
 
 app.use(morgan("tiny"));
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -48,7 +48,10 @@ app.get("/urls", (req,res) => {
 
 //good - create new URL page
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  const templateVars = {
+    username: req.cookies["username"]
+  }
+  res.render("urls_new", templateVars);
 });
 
 // good - window after new URL is created
@@ -89,13 +92,13 @@ app.post("/urls/:id", (req, res) => {
 
 //login
 app.post("/login", (req, res) => {
-  res.cookie('username', 'meg');
+  res.cookie('username');
   res.redirect("/urls");
 });
 
 //logout
 app.post("/logout", (req, res) => {
-  //clears cookies and redirects to login
+  res.clearCookie('username');
   res.redirect("/urls");
 });
 
