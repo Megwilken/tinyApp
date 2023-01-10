@@ -4,7 +4,7 @@ const morgan = require("morgan");
 const bodyParser = require("body-parser");
 
 const app = express();
-const PORT = 8000;
+const PORT = 8080;
 
 app.use(morgan("tiny"));
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -15,6 +15,19 @@ app.use(cookieParser())
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
+};
+
+const users = {
+  userRandomID: {
+    id: "userRandomID",
+    email: "user@example.com",
+    password: "purple-monkey-dinosaur",
+  },
+  user2RandomID: {
+    id: "user2RandomID",
+    email: "user2@example.com",
+    password: "dishwasher-funk",
+  },
 };
 
 //good - helper function
@@ -90,17 +103,48 @@ app.post("/urls/:id", (req, res) => {
    res.redirect('/urls');
  });
 
-//login
-app.post("/login", (req, res) => {
-  res.cookie('username');
-  res.redirect("/urls");
-});
-
 //logout
 app.post("/logout", (req, res) => {
   res.clearCookie('username');
   res.redirect("/urls");
 });
+app.get("/login", (req, res) => {
+  const templateVars = { 
+    username: req.cookies["username"],
+   };
+   res.render("login", templateVars)
+  });
+  
+
+app.get("/register", (req, res) => {
+const templateVars = { 
+  username: req.cookies["username"]
+ };
+ res.render("register", templateVars)
+});
+
+app.post("/register", (req, res) => {
+  const newID = generateRandomString();
+  users[newID] = {
+      id: newID,
+      email: req.body.email,
+      password: req.body.password
+    },
+  res.cookie("username");
+  res.redirect("/urls");
+});
+
+
+  app.post("/login", (req, res) => {
+    const newID = generateRandomString();
+    users[newID] = {
+        id: newID,
+        email: req.body.email,
+        password: req.body.password
+      },
+    res.cookie("username");
+    res.redirect("/urls");
+  });
 
 //good
 app.listen(PORT, () => {

@@ -19,14 +19,16 @@
       </div>
        <% if (username) { %> 
            <p>Logged in as: TinyApp User!</p>
-        <form action="/logout" method="POST" class="col-md-4">
-        <button type="submit" class="btn btn-outline-dark">Logout</button>
+        <form action="/logout" method="POST" class="col-md-2">
+          <button type="submit" class="btn btn-outline-dark">Logout</button>
         </form>
         <% } else { %> 
-        <form action="/login" method="POST" class="col-md-4">
-        <input type="text" name="username" placeholder="username">
-        <button type="submit" class="btn btn-outline-dark">Login</button>
-      </form>
+          <form action="/register" method="GET" class="col-md-1">
+            <button type="submit" class="btn btn-outline-dark">Register</button>
+           </form>
+          <form action="/login" method="GET" class="col-md-2">
+            <button type="submit" class="btn btn-outline-dark">Login</button>
+          </form>
       <% } %>
     </div>
   </nav>
