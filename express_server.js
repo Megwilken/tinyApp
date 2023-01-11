@@ -1,8 +1,6 @@
 const express = require("express");
 const cookieSession = require("cookie-session")
 const morgan = require("morgan");
-const bodyParser = require("body-parser");
-const { urlencoded } = require("body-parser");
 const bcrypt = require("bcryptjs");
 const password = "purple-monkey-dinosaur"; 
 
@@ -10,7 +8,6 @@ const app = express();
 const PORT = 8080;
 
 app.use(morgan("tiny"));
-app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.urlencoded({ extended: true }));
 app.set("view engine", "ejs");
 app.use(cookieSession({
@@ -58,12 +55,15 @@ function getUserByEmail(email, userDatabase) {
   return false;
 }
 
-//good - initial route
+//GOOD - initial route
 app.get("/", (req, res) => {
+  //if logged in
   res.redirect("/urls");
+  //iff not logged in
+  // res.redirect("/login")
 });
 
-//good - main url page
+//GOOD - main url page
 app.get("/urls", (req, res) => {
   const templateVars = {
     urls: urlDatabase,
@@ -72,7 +72,7 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
-//good - create new URL page
+//GOOD - create new URL page
 app.get("/urls/new", (req, res) => {
   const templateVars = {
     user_id: req.session.user_id
@@ -80,40 +80,38 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new", templateVars);
 });
 
-// FIX- window after new URL is created
+// GOOD - window after new URL is created
 app.get("/urls/:id", (req, res) => {
-  let id = req.params.id;
-  let longURL = urlDatabase[req.params.id];
   const templateVars = {
     id: req.params.id,
-    longURL: urlDatabase[req.params.id].longURL,
+    longURL: urlDatabase[req.params.id],
     user_id: req.session.user_id,
   };
   res.render("urls_show", templateVars);
 });
 
-// good - redirect to website when clicking short URL link
+// GOOD - redirect to website when clicking short URL link
 app.get("/u/:id", (req, res) => {
   const id = req.params.id;
-  const longURL = urlDatabase[req.params.id];
+  const longURL = urlDatabase[req.params.id].longURL;
   res.redirect(longURL);
 });
 
-//good - create new URL
+//GOOD - create new URL
 app.post("/urls", (req, res) => {
-  const id = generateRandomString(); //good
- const newURL = req.body.longURL;
- urlDatabase[id] = newURL;
+  const id = generateRandomString(); 
+  urlDatabase[id] = req.body.longURL;
   res.redirect(`/urls/${id}`);
 });
 
-//good - for edit url info - update database
+//GOOD - for edit url info - update database
 app.post("/urls/:id", (req, res) => {
-  urlDatabase[req.params.id].longURL = req.body.newURL;
+  const id = req.params.id;
+  urlDatabase[id] = req.body.newURL;
   res.redirect("/urls");
 });
 
-//good - delete url
+//GOOD - delete url
 app.post("/urls/:id/delete", (req, res) => {
   delete urlDatabase[req.params.id];
   res.redirect("/urls");
@@ -162,6 +160,10 @@ app.post("/register", (req, res) => {
 app.post("/logout", (req, res) => {
   res.clearCookie("user_id");
   res.redirect("/urls");
+});
+
+app.get("/urls.json", (req, res) => {
+  res.json(urlDatabase);
 });
 
 //good
