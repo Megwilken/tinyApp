@@ -14,21 +14,25 @@
   <body>
     <%- include('partials/_header') %>
     <div class="card text-center">
-      <div class="card-header"></div>
       <div class="card-body">
-        <h5 class="card-title">Create an Account</h5>
+        <h3 class="card-title">Create an Account</h3>
         <form action="/register" method="POST">
-          <p class="card-text">Email:</p>
+          <label for="email">Email:</label>
           <input type="email" name="email">
           <br>
           <br>
-          <p class="card-text">Password:</p>
+          <label for "password">Password:</label>
           <input type="password" name="password">
           <br>
           <br>
           <button type="submit" class="btn btn-primary">Submit</button>
+          <br>
+          <br>
+          <p>After registrering we will redirect you to the <a href = "/login">Login page</a></p>
+        </div>
         </form>
-      </div
+      </div>
+      </div>
     <!-- Bootstrap JS -->
     <script
       src="https://code.jquery.com/jquery-3.3.1.slim.min.js"

@@ -17,10 +17,10 @@
         <a class="nav-item nav-link" href="/urls">My URLs</a>
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
       </div>
-       <% if (username) { %> 
-           <p>Logged in as: TinyApp User!</p>
-        <form action="/logout" method="POST" class="col-md-2">
-          <button type="submit" class="btn btn-outline-dark">Logout</button>
+       <% if (user_id) { %> 
+           <form action="/logout" method="POST" class="col-md-2">
+            <p>Logged in as: <%= user %>></p>
+             <button type="submit" class="btn btn-outline-dark">Logout</button>
         </form>
         <% } else { %> 
           <form action="/register" method="GET" class="col-md-1">

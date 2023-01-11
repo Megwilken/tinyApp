@@ -14,19 +14,21 @@
   <body>
     <%- include('partials/_header') %>
     <div class="card text-center">
-      <div class="card-header"></div>
       <div class="card-body">
-        <h5 class="card-title">Login</h5>
+        <h3 class="card-title">Login to Your Account</h3>
         <form action="/login" method="POST">
-          <p class="card-text">Email:</p>
-          <input type="email" name="email">
+          <label for="email">Email:</label>
+          <input type="email" name="email" required>
           <br>
           <br>
-          <p class="card-text">Password:</p>
-          <input type="password" name="password">
+          <label for "password">Password:</label>
+          <input type="password" name="password" required>
           <br>
           <br>
           <button type="submit" class="btn btn-primary">Submit</button>
+          <br>
+          <br>
+          <p>Don't have an account? <a href="/register">Click here to Register!</a></p>
         </form>
       </div
     <!-- Bootstrap JS -->
