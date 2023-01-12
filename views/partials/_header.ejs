@@ -13,23 +13,25 @@
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-      <div class="navbar-nav col-md-8">
+      <div class="navbar-nav col-md-10">
         <a class="nav-item nav-link" href="/urls">My URLs</a>
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
       </div>
-       <% if (user_id) { %> 
+       <% if (user) { %> 
            <form action="/logout" method="POST" class="col-md-2">
-            <p>Logged in as: <%= user %>></p>
-             <button type="submit" class="btn btn-outline-dark">Logout</button>
+            <div>
+            <p>Logged in as: <%= user.email %></p>
+             <button type="submit" class="nav-item nav-link">Logout</button>
+            </div>
         </form>
         <% } else { %> 
-          <form action="/register" method="GET" class="col-md-1">
-            <button type="submit" class="btn btn-outline-dark">Register</button>
-           </form>
-          <form action="/login" method="GET" class="col-md-2">
-            <button type="submit" class="btn btn-outline-dark">Login</button>
-          </form>
+          <div class="collapse navbar-collapse justify-content-end" id="navbarNavAltMarkup">
+            <div class="navbar-nav">
+              <a class="nav-item nav-link" href="/login" style="margin: 1em">Login</a>
+              <a class="nav-item nav-link" href="/register" style="margin: 1em">Register</a>
+            </div>
+          </div>
       <% } %>
-    </div>
+   
   </nav>
 </header>

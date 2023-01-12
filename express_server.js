@@ -36,7 +36,7 @@ let users = {
   },
 };
 
-//good - helper function
+//GOOD - helper function
 function generateRandomString() {
   let result = "";
   let chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -46,66 +46,84 @@ function generateRandomString() {
   return result;
 }
 
-function getUserByEmail(email, userDatabase) {
-  for (let user in userDatabase) {
-    if (userDatabase[user].email === email) {
-      return true;
+//GOOD - helper function
+function getUserByEmail(email, users) {
+  for (let user in users) {
+    if (users[user].email === email) {
+      return users[user];
     }
   }
-  return false;
+  return null;
 }
 
 //GOOD - initial route
 app.get("/", (req, res) => {
   //if logged in
   res.redirect("/urls");
-  //iff not logged in
+  // } else {
   // res.redirect("/login")
+  // };
 });
 
 //GOOD - main url page
 app.get("/urls", (req, res) => {
+  // IF NOT LOGGED IN, RETURN HTML ERROR MESSAGE
+  // else {
   const templateVars = {
     urls: urlDatabase,
-    user_id: req.session.user_id
+    user: users[req.session.user_id]
    };
   res.render("urls_index", templateVars);
+  // };
 });
 
 //GOOD - create new URL page
+// IF NOT LOGGED IN, REDIRECT TO LOGIN PAGE
 app.get("/urls/new", (req, res) => {
   const templateVars = {
-    user_id: req.session.user_id
+    user: users[req.session.user_id]
   };
   res.render("urls_new", templateVars);
 });
 
 // GOOD - window after new URL is created
 app.get("/urls/:id", (req, res) => {
+  //- if a URL for the given ID does not exist returns HTML with a relevant error message
+  // if user is not logged in returns HTML with a relevant error message
+  // if user is logged it but does not own the URL with the given ID returns HTML with a relevant error message
   const templateVars = {
     id: req.params.id,
     longURL: urlDatabase[req.params.id],
-    user_id: req.session.user_id,
+    user: users[req.session.user_id]
   };
   res.render("urls_show", templateVars);
 });
 
 // GOOD - redirect to website when clicking short URL link
 app.get("/u/:id", (req, res) => {
+  // IF URL DOES NOT EXIST, RETURN HTML ERROR MESSAGE
+  // else {
   const id = req.params.id;
   const longURL = urlDatabase[req.params.id].longURL;
   res.redirect(longURL);
+  // };
 });
 
 //GOOD - create new URL
 app.post("/urls", (req, res) => {
+  //IF NOT LOGGED IN RETURN HTML ERROR MESSAGE
+  // else {
   const id = generateRandomString(); 
   urlDatabase[id] = req.body.longURL;
   res.redirect(`/urls/${id}`);
+  // };
 });
 
 //GOOD - for edit url info - update database
 app.post("/urls/:id", (req, res) => {
+  //- if user is logged in and owns the URL for the given ID updates the URL AND redirects to `/urls`
+  // if user is not logged in returns HTML with a relevant error message
+  // if user is logged it but does not own the URL for the given ID returns HTML with a relevant error message
   const id = req.params.id;
   urlDatabase[id] = req.body.newURL;
   res.redirect("/urls");
@@ -113,60 +131,67 @@ app.post("/urls/:id", (req, res) => {
 
 //GOOD - delete url
 app.post("/urls/:id/delete", (req, res) => {
+  //- if user is not logged in returns HTML with a relevant error message
+  // if user is logged it but does not own the URL for the given ID returns HTML with a relevant error message
   delete urlDatabase[req.params.id];
   res.redirect("/urls");
 });
 
+//NEED TO FIX HEADER TO DISPLAY MESSAGE "LOGGED IN AS..."
 app.get("/login", (req, res) => {
   const templateVars = {
-    user_id: req.session.user_id,
+    user: users[req.session.user_id]
   };
   res.render("login", templateVars);
 });
 
+// FIX 
+app.post("/login", (req, res) => {
+  const user_id = users[req.params.id]
+  // const user = getUserByEmail(email, users);
+  const email = req.body.email;
+  const password = req.body.password;
+  req.session.user_id = users;
+  res.redirect("/urls");
+});
+
+//GOOD
 app.get("/register", (req, res) => {
   const templateVars = {
-    user_id: req.session.user_id,
+    user: users[req.session.user_id],
   };
   res.render("register", templateVars);
 });
 
-app.post("/login", (req, res) => {
-  const email = req.body.email;
-  const password = req.body.password;
-  res.cookie("user_id");
-  res.redirect("/urls");
-});
-
-// FIX
+// GOOD
 app.post("/register", (req, res) => {
   const email = req.body.email;
  if (getUserByEmail(email, users)) {
     res.status(400).send("An account already exists. Please login!");
   } else {
-    newUser = generateRandomString();
-    const hashedPassword = bcrypt.hashSync(req.body.password, 10)
-    users.push = {
+    const newUser = generateRandomString();
+     users[newUser] = {
       id: Date.now().toString(),
       email: req.body.email,
-      password: req.body.password,
+      password: bcrypt.hashSync(req.body.password, 10)
     };
-    res.cookie("user_id");
-    res.redirect("/login");
+    req.session.user_id = newUser;
+    res.redirect("/urls");
   }
 });
 
 //logout
 app.post("/logout", (req, res) => {
-  res.clearCookie("user_id");
-  res.redirect("/urls");
+  req.session = null;
+  res.redirect("/login");
 });
 
+//GOOD
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
-//good
+//GOOD
 app.listen(PORT, () => {
   console.log(`Example app listening on Port ${PORT}!`);
 });

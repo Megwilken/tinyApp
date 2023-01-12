@@ -13,15 +13,17 @@
 
   <body>
     <%- include('partials/_header') %>
-    <div class="card text-center">
+
       <div class="card-body">
         <h3 class="card-title">Login to Your Account</h3>
         <form action="/login" method="POST">
           <label for="email">Email:</label>
+          <br>
           <input type="email" name="email" required>
           <br>
           <br>
           <label for "password">Password:</label>
+          <br>
           <input type="password" name="password" required>
           <br>
           <br>
@@ -30,7 +32,7 @@
           <br>
           <p>Don't have an account? <a href="/register">Click here to Register!</a></p>
         </form>
-      </div
+     
     <!-- Bootstrap JS -->
     <script
       src="https://code.jquery.com/jquery-3.3.1.slim.min.js"

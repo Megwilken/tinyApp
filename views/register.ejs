@@ -13,25 +13,25 @@
 
   <body>
     <%- include('partials/_header') %>
-    <div class="card text-center">
       <div class="card-body">
         <h3 class="card-title">Create an Account</h3>
         <form action="/register" method="POST">
           <label for="email">Email:</label>
+          <br>
           <input type="email" name="email">
           <br>
           <br>
-          <label for "password">Password:</label>
+          <label for="password">Password:</label>
+          <br>
           <input type="password" name="password">
           <br>
           <br>
           <button type="submit" class="btn btn-primary">Submit</button>
           <br>
           <br>
-          <p>After registrering we will redirect you to the <a href = "/login">Login page</a></p>
+          <p>Already have an account? <a href = "/login">Login here!</a></p>
         </div>
         </form>
-      </div>
       </div>
     <!-- Bootstrap JS -->
     <script
