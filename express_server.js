@@ -1,8 +1,8 @@
 const express = require("express");
-const cookieSession = require("cookie-session")
+const cookieSession = require("cookie-session");
 const morgan = require("morgan");
 const bcrypt = require("bcryptjs");
-const password = "purple-monkey-dinosaur"; 
+const password = "purple-monkey-dinosaur";
 
 const app = express();
 const PORT = 8080;
@@ -10,13 +10,15 @@ const PORT = 8080;
 app.use(morgan("tiny"));
 app.use(express.urlencoded({ extended: true }));
 app.set("view engine", "ejs");
-app.use(cookieSession({
-  name: 'session',
-  keys: ['key1', 'key2'],
+app.use(
+  cookieSession({
+    name: "session",
+    keys: ["user_id"],
 
-  // Cookie Options
-  maxAge: 24 * 60 * 60 * 1000 // 24 hours
-}))
+    // Cookie Options
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+  })
+);
 
 const urlDatabase = {
   b2xVn2: "http://www.lighthouselabs.ca",
@@ -71,8 +73,8 @@ app.get("/urls", (req, res) => {
   // else {
   const templateVars = {
     urls: urlDatabase,
-    user: users[req.session.user_id]
-   };
+    user: req.session.user_id,
+  };
   res.render("urls_index", templateVars);
   // };
 });
@@ -81,7 +83,7 @@ app.get("/urls", (req, res) => {
 // IF NOT LOGGED IN, REDIRECT TO LOGIN PAGE
 app.get("/urls/new", (req, res) => {
   const templateVars = {
-    user: users[req.session.user_id]
+    user: req.session.user_id,
   };
   res.render("urls_new", templateVars);
 });
@@ -94,26 +96,22 @@ app.get("/urls/:id", (req, res) => {
   const templateVars = {
     id: req.params.id,
     longURL: urlDatabase[req.params.id],
-    user: users[req.session.user_id]
+    user: req.session.user_id,
   };
   res.render("urls_show", templateVars);
 });
 
 // GOOD - redirect to website when clicking short URL link
 app.get("/u/:id", (req, res) => {
-  // IF URL DOES NOT EXIST, RETURN HTML ERROR MESSAGE
-  // else {
-  const id = req.params.id;
-  const longURL = urlDatabase[req.params.id].longURL;
+  const longURL = urlDatabase[req.params.id];
   res.redirect(longURL);
-  // };
 });
 
 //GOOD - create new URL
 app.post("/urls", (req, res) => {
   //IF NOT LOGGED IN RETURN HTML ERROR MESSAGE
   // else {
-  const id = generateRandomString(); 
+  const id = generateRandomString();
   urlDatabase[id] = req.body.longURL;
   res.redirect(`/urls/${id}`);
   // };
@@ -137,20 +135,22 @@ app.post("/urls/:id/delete", (req, res) => {
   res.redirect("/urls");
 });
 
-//NEED TO FIX HEADER TO DISPLAY MESSAGE "LOGGED IN AS..."
+//GOOD
 app.get("/login", (req, res) => {
   const templateVars = {
-    user: users[req.session.user_id]
+    user: users,
+    user: req.session.user_id,
   };
   res.render("login", templateVars);
 });
 
-// FIX 
+//GOOD
 app.post("/login", (req, res) => {
-  const user_id = users[req.params.id]
-  // const user = getUserByEmail(email, users);
-  const email = req.body.email;
-  const password = req.body.password;
+  const user_id = users[req.params.id];
+  users = {
+    email: req.body.email,
+    password: req.body.password
+  }
   req.session.user_id = users;
   res.redirect("/urls");
 });
@@ -158,7 +158,7 @@ app.post("/login", (req, res) => {
 //GOOD
 app.get("/register", (req, res) => {
   const templateVars = {
-    user: users[req.session.user_id],
+    user: req.session.user_id,
   };
   res.render("register", templateVars);
 });
@@ -166,16 +166,16 @@ app.get("/register", (req, res) => {
 // GOOD
 app.post("/register", (req, res) => {
   const email = req.body.email;
- if (getUserByEmail(email, users)) {
+  if (getUserByEmail(email, users)) {
     res.status(400).send("An account already exists. Please login!");
   } else {
     const newUser = generateRandomString();
-     users[newUser] = {
+    users[newUser] = {
       id: Date.now().toString(),
       email: req.body.email,
-      password: bcrypt.hashSync(req.body.password, 10)
+      password: bcrypt.hashSync(req.body.password, 10),
     };
-    req.session.user_id = newUser;
+    req.session.user_id = users[newUser];
     res.redirect("/urls");
   }
 });
