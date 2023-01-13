@@ -2,6 +2,7 @@ const express = require("express");
 const cookieSession = require("cookie-session");
 const morgan = require("morgan");
 const bcrypt = require("bcryptjs");
+const { request, response } = require("express");
 const password = "purple-monkey-dinosaur";
 
 const app = express();
@@ -57,6 +58,26 @@ function getUserByEmail(email, users) {
   }
   return null;
 }
+
+// - possible helper function to check passwords?
+function passwordChecker(password, users) {
+  for (let user in users) {
+    if (users[user].password === password) {
+      return users[user];
+    }
+  }
+  return null;
+}
+
+// - possible helper function to confirm Login?
+// function userLogin(, users) {
+//   for (let user in users) {
+//     if (users[user]. === ) {
+//       return users[user];
+//     }
+//   }
+//   return null;
+// }
 
 //GOOD - initial route
 app.get("/", (req, res) => {
@@ -119,11 +140,10 @@ app.post("/urls", (req, res) => {
 
 //GOOD - for edit url info - update database
 app.post("/urls/:id", (req, res) => {
-  //- if user is logged in and owns the URL for the given ID updates the URL AND redirects to `/urls`
   // if user is not logged in returns HTML with a relevant error message
   // if user is logged it but does not own the URL for the given ID returns HTML with a relevant error message
   const id = req.params.id;
-  urlDatabase[id] = req.body.newURL;
+  urlDatabase[id] = req.body.longURL;
   res.redirect("/urls");
 });
 
@@ -146,13 +166,19 @@ app.get("/login", (req, res) => {
 
 //GOOD
 app.post("/login", (req, res) => {
-  const user_id = users[req.params.id];
-  users = {
-    email: req.body.email,
-    password: req.body.password
+  const email = req.body.email;
+  const password = req.body.password;
+  if (email.length > 0 && password.length > 0) {
+    users = {
+      email: req.body.email,
+      password: req.body.password,
+    };
+    req.session.user_id = users;
+    res.redirect("/urls");
+  } else {
+    res.send("Please enter your email and password to continue");
   }
-  req.session.user_id = users;
-  res.redirect("/urls");
+  res.end();
 });
 
 //GOOD
@@ -166,7 +192,10 @@ app.get("/register", (req, res) => {
 // GOOD
 app.post("/register", (req, res) => {
   const email = req.body.email;
-  if (getUserByEmail(email, users)) {
+  const password = req.body.password;
+  if (!req.body.email || !req.body.password) {
+    res.status(400).send("Please enter your email and password to register");
+  } else if (getUserByEmail(email, users)) {
     res.status(400).send("An account already exists. Please login!");
   } else {
     const newUser = generateRandomString();
