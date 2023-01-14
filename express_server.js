@@ -79,13 +79,15 @@ function passwordChecker(password, users) {
 //   return null;
 // }
 
+// urlsForUser(id)
+
 //GOOD - initial route
 app.get("/", (req, res) => {
-  //if logged in
-  res.redirect("/urls");
-  // } else {
-  // res.redirect("/login")
-  // };
+  if (req.session.user_id) {
+    res.redirect("/urls");
+  } else {
+    res.redirect("/login");
+  }
 });
 
 //GOOD - main url page
@@ -101,12 +103,15 @@ app.get("/urls", (req, res) => {
 });
 
 //GOOD - create new URL page
-// IF NOT LOGGED IN, REDIRECT TO LOGIN PAGE
 app.get("/urls/new", (req, res) => {
-  const templateVars = {
-    user: req.session.user_id,
-  };
-  res.render("urls_new", templateVars);
+  if (req.session.user_id) {
+    const templateVars = {
+      user: req.session.user_id,
+    };
+    res.render("urls_new", templateVars);
+  } else {
+    res.redirect("/login");
+  }
 });
 
 // GOOD - window after new URL is created
@@ -155,33 +160,32 @@ app.post("/urls/:id/delete", (req, res) => {
   res.redirect("/urls");
 });
 
-//GOOD
+
 app.get("/login", (req, res) => {
   const templateVars = {
     user: users,
     user: req.session.user_id,
-  };
+    };
   res.render("login", templateVars);
 });
 
-//GOOD
+
 app.post("/login", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-  if (email.length > 0 && password.length > 0) {
-    users = {
-      email: req.body.email,
-      password: req.body.password,
-    };
+  if (!req.body.email || !req.body.password) {
+    res.status(400).send("Please enter your email and password to login");
+  } else if (!getUserByEmail(email, users)) {
+    res.status(403).send("No account exists. Please register!");
+  } else if (!passwordChecker(password, users)) {
+    res.status(403).send("Password incorrect. Try again or register for an account!");
+  } else {
     req.session.user_id = users;
     res.redirect("/urls");
-  } else {
-    res.send("Please enter your email and password to continue");
   }
-  res.end();
 });
 
-//GOOD
+
 app.get("/register", (req, res) => {
   const templateVars = {
     user: req.session.user_id,
@@ -189,7 +193,7 @@ app.get("/register", (req, res) => {
   res.render("register", templateVars);
 });
 
-// GOOD
+
 app.post("/register", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
@@ -209,18 +213,18 @@ app.post("/register", (req, res) => {
   }
 });
 
-//logout
+
 app.post("/logout", (req, res) => {
-  req.session = null;
+  req.session.user_id = null;
   res.redirect("/login");
 });
 
-//GOOD
+
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
-//GOOD
+
 app.listen(PORT, () => {
   console.log(`Example app listening on Port ${PORT}!`);
 });
