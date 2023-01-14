@@ -2,7 +2,6 @@ const express = require("express");
 const cookieSession = require("cookie-session");
 const morgan = require("morgan");
 const bcrypt = require("bcryptjs");
-const { request, response } = require("express");
 const password = "purple-monkey-dinosaur";
 
 const app = express();
@@ -15,8 +14,6 @@ app.use(
   cookieSession({
     name: "session",
     keys: ["user_id"],
-
-    // Cookie Options
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
   })
 );
@@ -39,7 +36,7 @@ let users = {
   },
 };
 
-//GOOD - helper function
+// helper function to generate random string
 function generateRandomString() {
   let result = "";
   let chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -49,7 +46,7 @@ function generateRandomString() {
   return result;
 }
 
-//GOOD - helper function
+// helper function to check email
 function getUserByEmail(email, users) {
   for (let user in users) {
     if (users[user].email === email) {
@@ -59,7 +56,7 @@ function getUserByEmail(email, users) {
   return null;
 }
 
-// - possible helper function to check passwords?
+// helper function to check passwords
 function passwordChecker(password, users) {
   for (let user in users) {
     if (users[user].password === password) {
@@ -81,7 +78,6 @@ function passwordChecker(password, users) {
 
 // urlsForUser(id)
 
-//GOOD - initial route
 app.get("/", (req, res) => {
   if (req.session.user_id) {
     res.redirect("/urls");
@@ -92,9 +88,7 @@ app.get("/", (req, res) => {
 
 //GOOD - main url page
 app.get("/urls", (req, res) => {
-  // IF NOT LOGGED IN, RETURN HTML ERROR MESSAGE
-  // else {
-  const templateVars = {
+    const templateVars = {
     urls: urlDatabase,
     user: req.session.user_id,
   };
@@ -102,16 +96,15 @@ app.get("/urls", (req, res) => {
   // };
 });
 
-//GOOD - create new URL page
 app.get("/urls/new", (req, res) => {
+  const templateVars = {
+    user: req.session.user_id,
+  };
   if (req.session.user_id) {
-    const templateVars = {
-      user: req.session.user_id,
-    };
     res.render("urls_new", templateVars);
   } else {
     res.redirect("/login");
-  }
+  };
 });
 
 // GOOD - window after new URL is created
@@ -130,17 +123,22 @@ app.get("/urls/:id", (req, res) => {
 // GOOD - redirect to website when clicking short URL link
 app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id];
+  if (urlDatabase[req.params.id]) {
   res.redirect(longURL);
+  } else {
+    res.send("shortURL does not exist!")
+  }
 });
 
 //GOOD - create new URL
 app.post("/urls", (req, res) => {
-  //IF NOT LOGGED IN RETURN HTML ERROR MESSAGE
-  // else {
   const id = generateRandomString();
   urlDatabase[id] = req.body.longURL;
+  if (req.session.user_id) {
   res.redirect(`/urls/${id}`);
-  // };
+  } else {
+    res.send("Please login or register to shorten URLs!")
+  }
 });
 
 //GOOD - for edit url info - update database
@@ -160,15 +158,17 @@ app.post("/urls/:id/delete", (req, res) => {
   res.redirect("/urls");
 });
 
-
 app.get("/login", (req, res) => {
   const templateVars = {
     user: users,
     user: req.session.user_id,
-    };
-  res.render("login", templateVars);
+  };
+  if (req.session.user_id) {
+    res.redirect("/urls");
+  } else {
+    res.render("login", templateVars);
+  }
 });
-
 
 app.post("/login", (req, res) => {
   const email = req.body.email;
@@ -178,21 +178,25 @@ app.post("/login", (req, res) => {
   } else if (!getUserByEmail(email, users)) {
     res.status(403).send("No account exists. Please register!");
   } else if (!passwordChecker(password, users)) {
-    res.status(403).send("Password incorrect. Try again or register for an account!");
+    res
+      .status(403)
+      .send("Password incorrect. Try again or register for an account!");
   } else {
     req.session.user_id = users;
     res.redirect("/urls");
   }
 });
 
-
 app.get("/register", (req, res) => {
   const templateVars = {
     user: req.session.user_id,
   };
-  res.render("register", templateVars);
+  if (req.session.user_id) {
+    res.redirect("/urls");
+  } else {
+    res.render("register", templateVars);
+  }
 });
-
 
 app.post("/register", (req, res) => {
   const email = req.body.email;
@@ -213,17 +217,14 @@ app.post("/register", (req, res) => {
   }
 });
 
-
 app.post("/logout", (req, res) => {
   req.session.user_id = null;
   res.redirect("/login");
 });
 
-
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
-
 
 app.listen(PORT, () => {
   console.log(`Example app listening on Port ${PORT}!`);
