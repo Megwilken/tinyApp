@@ -2,7 +2,6 @@ const express = require("express");
 const cookieSession = require("cookie-session");
 const morgan = require("morgan");
 const bcrypt = require("bcryptjs");
-const password = "purple-monkey-dinosaur";
 
 const app = express();
 const PORT = 8080;
@@ -19,8 +18,14 @@ app.use(
 );
 
 const urlDatabase = {
-  b2xVn2: "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com",
+  b2xVn2: {
+    longURL: "http://www.lighthouselabs.ca",
+    userID: "aJ48lW",
+  },
+  i3BoGr: {
+    longURL: "http://www.google.com",
+    userID: "aj48lW",
+  },
 };
 
 let users = {
@@ -66,16 +71,6 @@ function passwordChecker(password, users) {
   return null;
 }
 
-// - possible helper function to confirm Login?
-// function userLogin(, users) {
-//   for (let user in users) {
-//     if (users[user]. === ) {
-//       return users[user];
-//     }
-//   }
-//   return null;
-// }
-
 // urlsForUser(id)
 
 app.get("/", (req, res) => {
@@ -88,80 +83,90 @@ app.get("/", (req, res) => {
 
 //GOOD - main url page
 app.get("/urls", (req, res) => {
-    const templateVars = {
+  const templateVars = {
     urls: urlDatabase,
     user: req.session.user_id,
+    id: req.params.id,
+    longURL: urlDatabase[req.params.id]
   };
   res.render("urls_index", templateVars);
-  // };
 });
 
 app.get("/urls/new", (req, res) => {
-  const templateVars = {
-    user: req.session.user_id,
-  };
   if (req.session.user_id) {
+    const templateVars = {
+      user: req.session.user_id,
+      id: req.params.id,
+      longURL: urlDatabase[req.params.id],
+    };
     res.render("urls_new", templateVars);
   } else {
     res.redirect("/login");
-  };
+  }
 });
 
 // GOOD - window after new URL is created
 app.get("/urls/:id", (req, res) => {
-  //- if a URL for the given ID does not exist returns HTML with a relevant error message
-  // if user is not logged in returns HTML with a relevant error message
   // if user is logged it but does not own the URL with the given ID returns HTML with a relevant error message
+  // const longURL = urlDatabase[req.params.id].longURL  
   const templateVars = {
     id: req.params.id,
-    longURL: urlDatabase[req.params.id],
+    longURL: urlDatabase[req.params.id].longURL,
     user: req.session.user_id,
   };
+   if (!req.session.user_id) {
+    res.status(400).send("Please login to continue!");
+  }
   res.render("urls_show", templateVars);
 });
 
 // GOOD - redirect to website when clicking short URL link
 app.get("/u/:id", (req, res) => {
-  const longURL = urlDatabase[req.params.id];
-  if (urlDatabase[req.params.id]) {
-  res.redirect(longURL);
+  const longURL = urlDatabase[req.params.id].longURL;
+  if (urlDatabase[req.params.id].longURL) {
+    res.redirect(longURL);
   } else {
-    res.send("shortURL does not exist!")
+    res.send("shortURL does not exist!");
   }
 });
 
 //GOOD - create new URL
 app.post("/urls", (req, res) => {
   const id = generateRandomString();
-  urlDatabase[id] = req.body.longURL;
+
   if (req.session.user_id) {
-  res.redirect(`/urls/${id}`);
+    res.redirect(`/urls/${id}`);
   } else {
-    res.send("Please login or register to shorten URLs!")
+    res.send("Please login or register to shorten URLs!");
   }
 });
 
 //GOOD - for edit url info - update database
 app.post("/urls/:id", (req, res) => {
-  // if user is not logged in returns HTML with a relevant error message
   // if user is logged it but does not own the URL for the given ID returns HTML with a relevant error message
-  const id = req.params.id;
-  urlDatabase[id] = req.body.longURL;
+  urlDatabase[req.params.id].longURL = req.body.longURL;
   res.redirect("/urls");
 });
 
 //GOOD - delete url
 app.post("/urls/:id/delete", (req, res) => {
-  //- if user is not logged in returns HTML with a relevant error message
-  // if user is logged it but does not own the URL for the given ID returns HTML with a relevant error message
-  delete urlDatabase[req.params.id];
-  res.redirect("/urls");
+  if (!req.session.user_id) {
+    res.status(400).send("Please login to continue!");
+  } else {
+  /* else {
+    if (req.session.user_id) {
+      if user_id does not own url, error message
+  */
+    delete urlDatabase[req.params.id];
+    res.redirect("/urls");
+  }
 });
 
 app.get("/login", (req, res) => {
   const templateVars = {
     user: users,
-    user: req.session.user_id,
+    user_id: req.session.user_id,
+    //fix ^ does not show name on login
   };
   if (req.session.user_id) {
     res.redirect("/urls");
@@ -189,7 +194,8 @@ app.post("/login", (req, res) => {
 
 app.get("/register", (req, res) => {
   const templateVars = {
-    user: req.session.user_id,
+    user: users,
+    user_id: req.session.user_id,
   };
   if (req.session.user_id) {
     res.redirect("/urls");
@@ -200,7 +206,7 @@ app.get("/register", (req, res) => {
 
 app.post("/register", (req, res) => {
   const email = req.body.email;
-  const password = req.body.password;
+  // const password = req.body.password;
   if (!req.body.email || !req.body.password) {
     res.status(400).send("Please enter your email and password to register");
   } else if (getUserByEmail(email, users)) {
