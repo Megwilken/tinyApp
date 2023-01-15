@@ -96,8 +96,8 @@ app.get("/urls/:id", (req, res) => {
 
 // GOOD - redirect to website when clicking short URL link
 app.get("/u/:id", (req, res) => {
-  const longURL = urlDatabase[req.params.id].longURL;
   if (urlDatabase[req.params.id].longURL) {
+    const longURL = urlDatabase[req.params.id].longURL;
     res.redirect(longURL);
   } else {
     res.send("shortURL does not exist!");
@@ -106,9 +106,12 @@ app.get("/u/:id", (req, res) => {
 
 //GOOD - create new URL
 app.post("/urls", (req, res) => {
-  const id = generateRandomString();
-
   if (req.session.user_id) {
+    const id = generateRandomString();
+    urlDatabase[id] = {
+      longURL: req.body.longURL,
+      user_id: req.session.user_id
+    }
     res.redirect(`/urls/${id}`);
   } else {
     res.send("Please login or register to shorten URLs!");
