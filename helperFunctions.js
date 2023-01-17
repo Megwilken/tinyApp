@@ -29,14 +29,14 @@ function passwordChecker(password, users) {
 }
 
 // helper function - returns urls where userID equals id of logged in user
-const urlsForUser = function(id) {
+const urlsForUser = function(id, urlDatabase) {
   const urls = {};
   for (const id in urlDatabase) {
     if (urlDatabase[id].user_id === id) {
       urls[id] = urlDatabase[id];
     }
   }
-  return userUrls;
+  return urls;
 };
 
 module.exports = {
