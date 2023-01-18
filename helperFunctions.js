@@ -29,10 +29,10 @@ function passwordChecker(password, users) {
 }
 
 // helper function - returns urls where userID equals id of logged in user
-const urlsForUser = function(id, urlDatabase) {
+const urlsForUser = function(sessionID, urlDatabase) {
   const urls = {};
   for (const id in urlDatabase) {
-    if (urlDatabase[id].user_id === id) {
+    if (urlDatabase[id].userID === sessionID) {
       urls[id] = urlDatabase[id];
     }
   }

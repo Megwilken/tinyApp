@@ -8,6 +8,7 @@ const {
   passwordChecker,
   urlsForUser,
 } = require("./helperFunctions");
+const { urlDatabase, users } = require("./database/database.js")
 
 const app = express();
 const PORT = 8080;
@@ -23,30 +24,6 @@ app.use(
   })
 );
 
-const urlDatabase = {
-  b2xVn2: {
-    longURL: "http://www.lighthouselabs.ca",
-    userID: "aJ48lW",
-  },
-  i3BoGr: {
-    longURL: "http://www.google.com",
-    userID: "aj48lW",
-  },
-};
-
-let users = {
-  userRandomID: {
-    id: "userRandomID",
-    email: "user@example.com",
-    password: "purple-monkey-dinosaur",
-  },
-  user2RandomID: {
-    id: "user2RandomID",
-    email: "user2@example.com",
-    password: "dishwasher-funk",
-  },
-};
-
 app.get("/", (req, res) => {
   if (req.session.user_id) {
     res.redirect("/urls");
@@ -55,7 +32,6 @@ app.get("/", (req, res) => {
   }
 });
 
-// main url page, users can visit whether logged in or not
 app.get("/urls", (req, res) => {
   const templateVars = {
     urls: urlDatabase,
@@ -79,10 +55,8 @@ app.get("/urls/new", (req, res) => {
 
 // renders URLs show page
 app.get("/urls/:id", (req, res) => {
-// if user is not logged in
   if (!req.session.user_id) {
     res.status(400).send("Please login to continue!");
-// if user logged in add to databse
   } else {
     if (req.session.user_id) {
       const templateVars = {
@@ -104,9 +78,7 @@ app.get("/u/:id", (req, res) => {
   }
 });
 
-// create new URL for a user that is logged in
 app.post("/urls", (req, res) => {
-// if user is logged in
   if (req.session.user_id) {
     const id = generateRandomString();
     urlDatabase[id] = {
@@ -114,7 +86,6 @@ app.post("/urls", (req, res) => {
       user_id: req.session.user_id,
     };
     res.redirect(`/urls/${id}`);
-// redirect to login if user is not logged in
   } else {
     res.status(400).send("Please login or register to shorten URLs!");
   }
@@ -130,6 +101,8 @@ app.post("/urls/:id/delete", (req, res) => {
 // if user is not logged in send error
   if (!req.session.user_id) {
     res.status(400).send("This url does not belong to you. Please login to continue!");
+// If user logged in but doesn't own url send error
+
 // if user is logged in delete
   } else {
     delete urlDatabase[req.params.id];
@@ -148,22 +121,18 @@ app.get("/login", (req, res) => {
   }
 });
 
-// login form
+
 app.post("/login", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-  const user = users;
-  const id = users[req.params.id];
   if (!req.body.email || !req.body.password) {
     res.status(400).send("Please enter your email and password to login");
   } else if (!getUserByEmail(email, users)) {
     res.status(403).send("No account exists. Please register!");
   } else if (!passwordChecker(password, users)) {
     res.status(403).send("Password incorrect. Try again or register for an account!");
-// successful login
   } else {
-    req.session.user_id = user;
-    //fix ^
+    req.session.user_id = users;
     res.redirect("/urls");
   }
 });
@@ -180,18 +149,18 @@ app.get("/register", (req, res) => {
 });
 
 app.post("/register", (req, res) => {
-  const newEmail = req.body.email;
-  const newPassword = req.body.password;
-  if (!newEmail || !newPassword) {
+  const email = req.body.email;
+  const [password] = req.body.password;
+  if (!email || ![password]) {
     res.status(400).send("Please enter your email and password to register");
-  } else if (getUserByEmail(newEmail, users)) {
+  } else if (getUserByEmail(email, users)) {
     res.status(400).send("An account already exists. Please login!");
   } else {
     const newUser = generateRandomString();
     users[newUser] = {
       id: newUser,
-      email: newEmail,
-      password: bcrypt.hashSync(newPassword, 15),
+      email: email,
+      password: bcrypt.hashSync(password, 15),
     };
     req.session.user_id = newUser;
     res.redirect("/urls");
