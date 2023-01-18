@@ -232,7 +232,7 @@ app.post("/register", (req, res) => {
 //logout and clear cookies
 app.post("/logout", (req, res) => {
   req.session = null;
-  res.redirect("/urls");
+  res.redirect("/login");
 });
 
 app.get("/urls.json", (req, res) => {
