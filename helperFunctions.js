@@ -1,3 +1,5 @@
+const bcrypt = require("bcryptjs");
+
 // helper function to generate random string
 function generateRandomString() {
   let result = "";
@@ -29,19 +31,33 @@ function passwordChecker(password, users) {
 }
 
 // helper function - returns urls where userID equals id of logged in user
-const urlsForUser = function(sessionID, urlDatabase) {
-  const urls = {};
-  for (const id in urlDatabase) {
-    if (urlDatabase[id].userID === sessionID) {
-      urls[id] = urlDatabase[id];
+const urlsForUser = (id, database) => {
+  let urls = {};
+  for (let urlID of Object.keys(database)) {
+    if (database[urlID].userID === id) {
+      urls[urlID] = database[urlID];
     }
   }
   return urls;
 };
 
+const addUser = (email, password, db) => {
+  const hashedPassword = bcrypt.hashSync(password, 10);
+  const id = generateRandomString();
+  db[id] = {
+    id,
+    email,
+    password: hashedPassword
+  };
+  return id;
+};
+
+
+
 module.exports = {
   generateRandomString,
   getUserByEmail,
   passwordChecker,
-  urlsForUser
+  urlsForUser,
+  addUser
 }

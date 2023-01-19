@@ -7,6 +7,7 @@ const {
   getUserByEmail,
   passwordChecker,
   urlsForUser,
+  addUser
 } = require("./helperFunctions");
 const { urlDatabase, users } = require("./database/database.js")
 
@@ -45,7 +46,8 @@ app.get("/urls", (req, res) => {
 app.get("/urls/new", (req, res) => {
   if (req.session.user_id) {
     const templateVars = {
-      user: req.session.user_id,
+      user_id: req.session.user_id,
+      user: users
     };
     res.render("urls_new", templateVars);
   } else {
@@ -53,20 +55,20 @@ app.get("/urls/new", (req, res) => {
   }
 });
 
-// renders URLs show page
+//renders URLs show page
 app.get("/urls/:id", (req, res) => {
-  if (!req.session.user_id) {
-    res.status(400).send("Please login to continue!");
-  } else {
-    if (req.session.user_id) {
+    if (urlDatabase[req.params.id].user_id === req.session.user_id && urlDatabase[req.params.id])   {
       const templateVars = {
         id: req.params.id,
         longURL: urlDatabase[req.params.id].longURL,
-        user: req.session.user_id,
+        user_id: req.session.user_id,
+        user: users,
+        urls: urlDatabase,
       };
       res.render("urls_show", templateVars);
-    }
-  }
+    } else {
+        res.status(400).send("You do not own this URL");
+};
 });
 
 app.get("/u/:id", (req, res) => {
@@ -90,23 +92,23 @@ app.post("/urls", (req, res) => {
     res.status(400).send("Please login or register to shorten URLs!");
   }
 });
-
+//GOOD
 app.post("/urls/:id", (req, res) => {
-  urlDatabase[req.params.id].longURL = req.body.longURL;
-  res.redirect("/urls");
+  if (req.body.longURL.length > 0 && req.session.user_id) {
+    urlDatabase[req.params.id].longURL = req.body.longURL;
+    res.redirect('/urls');
+  } else {
+    res.status(401).send("You do not have authorization to edit this short URL.");
+  }
 });
 
 // delete url
 app.post("/urls/:id/delete", (req, res) => {
-// if user is not logged in send error
-  if (!req.session.user_id) {
-    res.status(400).send("This url does not belong to you. Please login to continue!");
-// If user logged in but doesn't own url send error
-
-// if user is logged in delete
-  } else {
-    delete urlDatabase[req.params.id];
-    res.redirect("/urls");
+  if (urlDatabase[req.params.id].user_id === req.session.user_id) {
+  delete urlDatabase[req.params.id];
+  res.redirect('/urls');
+     } else {
+    res.status(400).send("This url does not belong to you. Please login to continue!");;
   }
 });
 
@@ -115,16 +117,17 @@ app.get("/login", (req, res) => {
     res.redirect("/urls");
   } else {
     const templateVars = {
-      user: users[req.session.user_id]
+      user_id: req.session.user_id,
+      user: users
     };
     res.render("login", templateVars);
   }
 });
-
-
+//FIX
 app.post("/login", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
+  const user = getUserByEmail(email, users)
   if (!req.body.email || !req.body.password) {
     res.status(400).send("Please enter your email and password to login");
   } else if (!getUserByEmail(email, users)) {
@@ -132,7 +135,7 @@ app.post("/login", (req, res) => {
   } else if (!passwordChecker(password, users)) {
     res.status(403).send("Password incorrect. Try again or register for an account!");
   } else {
-    req.session.user_id = users;
+    req.session.user_id = user.id;
     res.redirect("/urls");
   }
 });
@@ -142,27 +145,23 @@ app.get("/register", (req, res) => {
     res.redirect("/urls");
   } else {
     const templateVars = {
-      user: users[req.session.user_id],
+      user_id: req.session.user_id,
+      user: users,
     };
     res.render("register", templateVars);
   }
 });
-
 app.post("/register", (req, res) => {
   const email = req.body.email;
-  const [password] = req.body.password;
+  const password = req.body.password;
+  const userID = generateRandomString();
   if (!email || ![password]) {
     res.status(400).send("Please enter your email and password to register");
   } else if (getUserByEmail(email, users)) {
     res.status(400).send("An account already exists. Please login!");
   } else {
-    const newUser = generateRandomString();
-    users[newUser] = {
-      id: newUser,
-      email: email,
-      password: bcrypt.hashSync(password, 15),
-    };
-    req.session.user_id = newUser;
+    const user_id = addUser(email, password, users);
+    req.session.user_id = user_id;
     res.redirect("/urls");
   }
 });
