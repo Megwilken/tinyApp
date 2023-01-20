@@ -30,21 +30,11 @@ function passwordChecker(password, users) {
   return null;
 }
 
-// helper function - returns urls where userID equals id of logged in user
-const urlsForUser = (id, database) => {
-  let urls = {};
-  for (let urlID of Object.keys(database)) {
-    if (database[urlID].userID === id) {
-      urls[urlID] = database[urlID];
-    }
-  }
-  return urls;
-};
-
-const addUser = (email, password, db) => {
+// helper function - adds user to database
+const addUser = (email, password, users) => {
   const hashedPassword = bcrypt.hashSync(password, 10);
   const id = generateRandomString();
-  db[id] = {
+  users[id] = {
     id,
     email,
     password: hashedPassword
@@ -52,12 +42,9 @@ const addUser = (email, password, db) => {
   return id;
 };
 
-
-
 module.exports = {
   generateRandomString,
   getUserByEmail,
   passwordChecker,
-  urlsForUser,
   addUser
 }
