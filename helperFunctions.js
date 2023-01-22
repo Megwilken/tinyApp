@@ -42,9 +42,20 @@ const addUser = (email, password, users) => {
   return id;
 };
 
+const urlsForUser = function(user_id, urlDatabase) {
+  const userUrls = {};
+  for (const id in urlDatabase) {
+    if (urlDatabase[id].userID === user_id) {
+      userUrls[id] = urlDatabase[id];
+    }
+  }
+  return userUrls;
+};
+
 module.exports = {
   generateRandomString,
   getUserByEmail,
   passwordChecker,
-  addUser
+  addUser,
+  urlsForUser,
 }

@@ -6,6 +6,7 @@ const {
   getUserByEmail,
   passwordChecker,
   addUser,
+  urlsForUser,
 } = require("./helperFunctions");
 const { urlDatabase, users } = require("./database/database.js")
 
@@ -35,10 +36,8 @@ app.get("/", (req, res) => {
 // MAIN URL PAGE
 app.get("/urls", (req, res) => {
   const templateVars = {
-    urls: urlDatabase,
+    urls: urlsForUser(req.session.user_id, urlDatabase),
     user: req.session.user_id,
-    id: req.params.id,
-    longURL: urlDatabase[req.params.id],
   };
   res.render("urls_index", templateVars);
 });
@@ -58,13 +57,12 @@ app.get("/urls/new", (req, res) => {
 
 // TINY URLS PAGE 
 app.get("/urls/:id", (req, res) => {
-    if (urlDatabase[req.params.id].user_id === req.session.user_id && urlDatabase[req.params.id])   {
+    if (urlDatabase[req.params.id])   {
       const templateVars = {
         id: req.params.id,
         longURL: urlDatabase[req.params.id].longURL,
-        user_id: req.session.user_id,
-        user: users,
-        urls: urlDatabase,
+        user_id: urlDatabase[req.params.id].userID,
+        user: users[req.session.user_id],
       };
       res.render("urls_show", templateVars);
     } else {
@@ -88,8 +86,7 @@ app.post("/urls", (req, res) => {
     const id = generateRandomString();
     urlDatabase[id] = {
       longURL: req.body.longURL,
-      user_id: req.session.user_id,
-      email: req.body.email
+      userID: req.session.user_id,
     };
     res.redirect(`/urls/${id}`);
   } else {
@@ -99,8 +96,11 @@ app.post("/urls", (req, res) => {
 
 // EDIT TINY URLS
 app.post("/urls/:id", (req, res) => {
-  if (req.body.longURL.length > 0 && req.session.user_id) {
-    urlDatabase[req.params.id].longURL = req.body.longURL;
+  const user_id = req.session.user_id;
+  const userUrls = urlsForUser(user_id, urlDatabase);
+  if (Object.keys(userUrls).includes(req.params.id)) {
+    const id = req.params.id;
+    urlDatabase[id].longURL = req.body.longURL;
     res.redirect('/urls');
   } else {
     res.send("You do not have authorization to edit this short URL.");
@@ -110,9 +110,11 @@ app.post("/urls/:id", (req, res) => {
 // DELETE URL FROM DATABASE
 app.post("/urls/:id/delete", (req, res) => {
   const user_id = req.session.user_id;
-  if (urlDatabase[req.params.id].user_id === req.session.user_id) {
-  delete urlDatabase[req.params.id];
-  res.redirect('/urls');
+  const userUrls = urlsForUser(user_id, urlDatabase);
+  if (Object.keys(userUrls).includes(req.params.id)) {
+    const id = req.params.id;
+    delete urlDatabase[id];
+    res.redirect('/urls');
      } else {
     res.send("This url does not belong to you!");
   }
