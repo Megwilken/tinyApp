@@ -35,11 +35,19 @@ app.get("/", (req, res) => {
 
 // MAIN URL PAGE
 app.get("/urls", (req, res) => {
+if (!req.session.user_id) {
+  res.redirect("login")
+} else {
+  console.log(users)
+  console.log(req.session.user_id)
   const templateVars = {
     urls: urlsForUser(req.session.user_id, urlDatabase),
+    user_id: req.session.user_id,
     user: req.session.user_id,
+    email: users[req.session.user_id].email
   };
   res.render("urls_index", templateVars);
+}
 });
 
 // CREATE NEW URLS
@@ -47,7 +55,8 @@ app.get("/urls/new", (req, res) => {
   if (req.session.user_id) {
     const templateVars = {
       user_id: req.session.user_id,
-      user: users
+      user: req.session.user_id,
+      email: users[req.session.user_id].email
     };
     res.render("urls_new", templateVars);
   } else {
@@ -62,7 +71,8 @@ app.get("/urls/:id", (req, res) => {
         id: req.params.id,
         longURL: urlDatabase[req.params.id].longURL,
         user_id: urlDatabase[req.params.id].userID,
-        user: users[req.session.user_id],
+        user: req.session.user_id,
+        email: users[req.session.user_id].email
       };
       res.render("urls_show", templateVars);
     } else {
@@ -124,11 +134,10 @@ app.post("/urls/:id/delete", (req, res) => {
 app.get("/login", (req, res) => {
   if (req.session.user_id) {
     res.redirect("/urls");
-    console.log(user);
   } else {
     const templateVars = {
       user_id: req.session.user_id,
-      user: users[req.session.user_id],
+      user: users[req.session.user_id]
     };
     res.render("login", templateVars);
   }

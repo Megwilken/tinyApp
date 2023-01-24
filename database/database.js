@@ -5,20 +5,20 @@ const urlDatabase = {
   },
   i3BoGr: {
     longURL: "http://www.google.com",
-    userID: "aj48lW",
+    userID: "aj48lX",
   },
 };
 
 const users = {
-  userRandomID: {
-    id: "user1RandomID",
+  aJ48lW: {
+    id: "aJ48lW",
     email: "user@example.com",
-    password: "purple-monkey-dinosaur",
+    password: "123",
   },
-  user2RandomID: {
-    id: "user2RandomID",
+  aj48lX: {
+    id: "aj48lX",
     email: "user2@example.com",
-    password: "dishwasher-funk",
+    password: "123",
   },
 };
 
