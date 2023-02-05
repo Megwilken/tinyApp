@@ -20,16 +20,6 @@ function getUserByEmail(email, users) {
   return null;
 }
 
-// helper function to check passwords
-function passwordChecker(password, users) {
-  for (let user in users) {
-    if (users[user].password === password) {
-      return users[user];
-    }
-  }
-  return null;
-}
-
 // helper function - adds user to database
 const addUser = (email, password, users) => {
   const hashedPassword = bcrypt.hashSync(password, 10);
@@ -55,7 +45,6 @@ const urlsForUser = function(user_id, urlDatabase) {
 module.exports = {
   generateRandomString,
   getUserByEmail,
-  passwordChecker,
   addUser,
   urlsForUser,
 }

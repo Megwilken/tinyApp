@@ -21,7 +21,6 @@ URL ID Page: displays the selected Long URL and it's correspondig Short URL. The
 - Express
 - EJS
 - bcryptjs
-- cookie-session
 
 ## Getting Started
 

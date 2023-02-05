@@ -1,10 +1,10 @@
 const express = require("express");
 const cookieSession = require("cookie-session");
 const morgan = require("morgan");
+const bcrypt = require("bcryptjs");
 const {
   generateRandomString,
   getUserByEmail,
-  passwordChecker,
   addUser,
   urlsForUser,
 } = require("./helperFunctions");
@@ -36,7 +36,7 @@ app.get("/", (req, res) => {
 // MAIN URL PAGE
 app.get("/urls", (req, res) => {
 if (!req.session.user_id) {
-  res.redirect("login")
+  res.send("Error! Please login or register to continue");
 } else {
   console.log(users)
   console.log(req.session.user_id)
@@ -66,7 +66,9 @@ app.get("/urls/new", (req, res) => {
 
 // TINY URLS PAGE 
 app.get("/urls/:id", (req, res) => {
-    if (urlDatabase[req.params.id])   {
+  if (!req.session.user_id) {
+    res.send("Error! Please login or register to continue");
+  } else if (req.session.user_id === urlDatabase[req.params.id].userID)   {
       const templateVars = {
         id: req.params.id,
         longURL: urlDatabase[req.params.id].longURL,
@@ -75,15 +77,15 @@ app.get("/urls/:id", (req, res) => {
         email: users[req.session.user_id].email
       };
       res.render("urls_show", templateVars);
-    } else {
-        res.send("You do not own this URL");
-  };
+    } else  {
+      res.status(404).send("You do not own this URL");
+    };
 });
 
 // REDIRECT TINY URLS
 app.get("/u/:id", (req, res) => {
   if (!urlDatabase[req.params.id]) {
-    res.send("URL is invalid or does not exist - try again!");
+    res.status(404).send("URL is invalid or does not exist - try again!");
   } else {
     const longURL = urlDatabase[req.params.id].longURL;
         res.redirect(longURL);
@@ -100,7 +102,7 @@ app.post("/urls", (req, res) => {
     };
     res.redirect(`/urls/${id}`);
   } else {
-    res.send("Please login or register to shorten URLs!");
+     res.status(401).send("Please login or register to shorten URLs!");
   }
 });
 
@@ -113,7 +115,7 @@ app.post("/urls/:id", (req, res) => {
     urlDatabase[id].longURL = req.body.longURL;
     res.redirect('/urls');
   } else {
-    res.send("You do not have authorization to edit this short URL.");
+    res.status(404).send("You do not have authorization to edit this short URL.");
   }
 });
 
@@ -126,7 +128,7 @@ app.post("/urls/:id/delete", (req, res) => {
     delete urlDatabase[id];
     res.redirect('/urls');
      } else {
-    res.send("This url does not belong to you!");
+    res.status(404).send("This url does not belong to you!");
   }
 });
 
@@ -149,11 +151,11 @@ app.post("/login", (req, res) => {
   const password = req.body.password;
   const user = getUserByEmail(email, users)
   if (!req.body.email || !req.body.password) {
-    res.send("Please enter your email and password to login");
+    res.status(403).send("Please enter your email and password to login");
   } else if (!getUserByEmail(email, users)) {
-    res.send("No account exists. Please register!");
-  } else if (!passwordChecker(password, users)) {
-    res.send("Password incorrect. Try again or register for an account!");
+    res.status(403).send("No account exists. Please register!");
+  } else if (!bcrypt.compareSync(password, user.password)) {
+    res.status(403).send("Password incorrect. Try again or register for an account!");
   } else {
     req.session.user_id = user.id;
     res.redirect("/urls");
@@ -180,7 +182,7 @@ app.post("/register", (req, res) => {
   if (!email || !password) {
     res.status(400).send("Please enter your email and password to register");
   } else if (getUserByEmail(email, users)) {
-    res.send("An account already exists. Please login!");
+    res.status(400).send("An account already exists. Please login!");
   } else {
     const user_id = addUser(email, password, users);
     req.session.user_id = user_id;
